@@ -1,0 +1,43 @@
+services:
+  myapp:
+    container_name: myapp
+    build:
+      context: ./myapp
+      dockerfile: Dockerfile
+    ports:
+      - 2112:2112
+    networks:
+      - main-network
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yaml'
+    ports:
+      - 9090:9090
+    restart: unless-stopped
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prom_data:/prometheus
+    networks:
+      - main-network
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grafana:/etc/grafana/provisioning/datasources
+    networks:
+      - main-network
+
+networks:
+  main-network:
+    driver: bridge
+
+volumes:
+  prom_data:
