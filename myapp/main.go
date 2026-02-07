@@ -57,6 +57,7 @@ func recordMetricsRs(m *metrics) {
 		for {
 			r := rand.IntN(13)
 			m.opsProcessed.Inc()
+			m.opsProcessed.Add(2 * float64(r))
 			time.Sleep(time.Duration(r) * time.Second)
 		}
 	}()
@@ -64,17 +65,21 @@ func recordMetricsRs(m *metrics) {
 
 func main() {
 	reg := prometheus.NewRegistry()
-	successProduce := newPromCounter(reg, "myapp_processed_ops_total", "produce", true)
-	failedProduce := newPromCounter(reg, "myapp_processed_ops_total", "produce", false)
+	successProduce := newPromCounter(reg, "myapp_counter_total", "produce", true)
+	failedProduce := newPromCounter(reg, "myapp_counter_total", "produce", false)
 
-	successConsume := newPromCounter(reg, "myapp_processed_ops_total", "consume", true)
-	failedConsume := newPromCounter(reg, "myapp_processed_ops_total", "consume", false)
+	successConsume := newPromCounter(reg, "myapp_counter_total", "consume", true)
+	failedConsume := newPromCounter(reg, "myapp_counter_total", "consume", false)
+
+	gauge := newPromGauge(reg, "myapp_gauge_total")
 
 	recordMetrics1s(successProduce)
 	recordMetricsRs(failedProduce)
 
 	recordMetricsRs(successConsume)
 	recordMetrics2s(failedConsume)
+
+	recordMetricsRs(gauge)
 
 	http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
 	http.ListenAndServe(":2112", nil)
