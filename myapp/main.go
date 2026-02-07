@@ -15,11 +15,20 @@ type metrics struct {
 	opsProcessed prometheus.Counter
 }
 
-func newMetrics(reg prometheus.Registerer, event string, isSuccess bool) *metrics {
+func newPromCounter(reg prometheus.Registerer, name string, event string, isSuccess bool) *metrics {
 	reg = prometheus.WrapRegistererWith(prometheus.Labels{"event": event, "isSuccess": strconv.FormatBool(isSuccess)}, reg)
 	m := &metrics{
 		opsProcessed: promauto.With(reg).NewCounter(prometheus.CounterOpts{
-			Name: "myapp_processed_ops_total",
+			Name: name,
+		}),
+	}
+	return m
+}
+
+func newPromGauge(reg prometheus.Registerer, name string) *metrics {
+	m := &metrics{
+		opsProcessed: promauto.With(reg).NewGauge(prometheus.GaugeOpts{
+			Name: name,
 		}),
 	}
 	return m
@@ -55,10 +64,17 @@ func recordMetricsRs(m *metrics) {
 
 func main() {
 	reg := prometheus.NewRegistry()
-	successProduce := newMetrics(reg, "produce", true)
-	failedProduce := newMetrics(reg, "produce", false)
+	successProduce := newPromCounter(reg, "myapp_processed_ops_total", "produce", true)
+	failedProduce := newPromCounter(reg, "myapp_processed_ops_total", "produce", false)
+
+	successConsume := newPromCounter(reg, "myapp_processed_ops_total", "consume", true)
+	failedConsume := newPromCounter(reg, "myapp_processed_ops_total", "consume", false)
+
 	recordMetrics1s(successProduce)
 	recordMetricsRs(failedProduce)
+
+	recordMetricsRs(successConsume)
+	recordMetrics2s(failedConsume)
 
 	http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
 	http.ListenAndServe(":2112", nil)
