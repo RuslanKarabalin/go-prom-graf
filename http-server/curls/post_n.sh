@@ -1,1 +1,1 @@
-curl -X POST 'http://localhost:8080/some' -H 'Content-Type: application/json' -d '{"text": "cora rora", "ok": false}'
+curl -X POST 'http://localhost:8080/somes' -H 'Content-Type: application/json' -d '{"text": "cora rora", "ok": false}'

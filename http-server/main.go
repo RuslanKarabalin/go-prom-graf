@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -12,18 +11,22 @@ type someType struct {
 	Text string `json:"text"`
 }
 
-func getSomeHandler(somes *map[int]someType) http.HandlerFunc {
+type server struct {
+	nextId int
+	somes  map[int]someType
+}
+
+func getSomeHandler(s *server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("Call 'getSomeHandler'")
-		jsonBytes, err := json.MarshalIndent(*somes, "", "  ")
-		if err != nil {
-			slog.Error("Can't code somes", slog.Any("error", err))
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(s.somes); err != nil {
+			slog.Error("Can't encode somes", slog.Any("error", err))
 		}
-		fmt.Fprintf(w, "%s", jsonBytes)
 	}
 }
 
-func postSomeHandler(id *int, somes *map[int]someType) http.HandlerFunc {
+func postSomeHandler(s *server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("Call 'postSomeHandler'")
 
@@ -37,12 +40,13 @@ func postSomeHandler(id *int, somes *map[int]someType) http.HandlerFunc {
 			http.Error(w, "Can't decode body", http.StatusBadRequest)
 			return
 		}
-		(*somes)[*id] = tmp
-		(*id)++
+		s.somes[s.nextId] = tmp
+		s.nextId++
+		w.WriteHeader(http.StatusCreated)
 	}
 }
 
-func putSomeHandler(somes *map[int]someType) http.HandlerFunc {
+func putSomeHandler(s *server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("Call 'putSomeHandler'")
 
@@ -64,19 +68,26 @@ func putSomeHandler(somes *map[int]someType) http.HandlerFunc {
 			http.Error(w, "Can't decode body", http.StatusBadRequest)
 			return
 		}
-		(*somes)[id] = tmp
+
+		if _, exists := s.somes[id]; !exists {
+			slog.Error("Can't find id")
+			http.Error(w, "Can't find id", http.StatusNotFound)
+			return
+		}
+		s.somes[id] = tmp
 	}
 }
 
 func main() {
 	mux := http.NewServeMux()
 
-	id := new(int(0))
-	somes := new(make(map[int]someType, 0))
+	server := &server{
+		somes: make(map[int]someType),
+	}
 
-	mux.HandleFunc("GET /some", getSomeHandler(somes))
-	mux.HandleFunc("POST /some", postSomeHandler(id, somes))
-	mux.HandleFunc("PUT /some/{id}", putSomeHandler(somes))
+	mux.HandleFunc("GET /somes", getSomeHandler(server))
+	mux.HandleFunc("POST /somes", postSomeHandler(server))
+	mux.HandleFunc("PUT /somes/{id}", putSomeHandler(server))
 
 	slog.Info("Server listening on port 8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
