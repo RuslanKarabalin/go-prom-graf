@@ -18,14 +18,42 @@ type server struct {
 	mtx    sync.RWMutex
 }
 
-func getSomeHandler(s *server) http.HandlerFunc {
+func getAllSomeHandler(s *server) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		slog.Info("Call 'getSomeHandler'")
+		slog.Info("Call 'getAllSomeHandler'")
 		w.Header().Set("Content-Type", "application/json")
 		s.mtx.RLock()
 		defer s.mtx.RUnlock()
 		if err := json.NewEncoder(w).Encode(s.somes); err != nil {
 			slog.Error("Can't encode somes", slog.Any("error", err))
+		}
+	}
+}
+
+func getSomeByIdHandler(s *server) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		slog.Info("Call 'getSomeByIdHandler'")
+
+		idStr := r.PathValue("id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			slog.Error("Can't parse id", slog.Any("error", err))
+			http.Error(w, "Can't parse id", http.StatusBadRequest)
+			return
+		}
+
+		s.mtx.RLock()
+		defer s.mtx.RUnlock()
+		some, exists := s.somes[id]
+		if !exists {
+			slog.Error("Can't find id")
+			http.Error(w, "Can't find id", http.StatusNotFound)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(some); err != nil {
+			slog.Error("Can't encode some", slog.Any("error", err))
 		}
 	}
 }
@@ -91,6 +119,30 @@ func putSomeHandler(s *server) http.HandlerFunc {
 	}
 }
 
+func deleteSomeByIdHandler(s *server) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		slog.Info("Call 'deleteSomeByIdHandler'")
+
+		idStr := r.PathValue("id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			slog.Error("Can't parse id", slog.Any("error", err))
+			http.Error(w, "Can't parse id", http.StatusBadRequest)
+			return
+		}
+
+		s.mtx.Lock()
+		defer s.mtx.Unlock()
+		if _, exists := s.somes[id]; !exists {
+			slog.Error("Can't find id")
+			http.Error(w, "Can't find id", http.StatusNotFound)
+			return
+		}
+		delete(s.somes, id)
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
 func main() {
 	mux := http.NewServeMux()
 
@@ -98,9 +150,11 @@ func main() {
 		somes: make(map[int]someType),
 	}
 
-	mux.HandleFunc("GET /somes", getSomeHandler(server))
+	mux.HandleFunc("GET /somes", getAllSomeHandler(server))
+	mux.HandleFunc("GET /somes/{id}", getSomeByIdHandler(server))
 	mux.HandleFunc("POST /somes", postSomeHandler(server))
 	mux.HandleFunc("PUT /somes/{id}", putSomeHandler(server))
+	mux.HandleFunc("DELETE /somes/{id}", deleteSomeByIdHandler(server))
 
 	slog.Info("Server listening on port 8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
