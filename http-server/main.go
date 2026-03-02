@@ -33,18 +33,17 @@ func main() {
 	}
 	defer conn.Close()
 
-	conn.Exec(ctx, "create table if not exists mytable(id int, name text)")
-
-	conn.Exec(ctx, "insert into mytable(id, name) values(1, 'Alice')")
-
-	var id int
-	var name string
-
-	row := conn.QueryRow(ctx, "select * from mytable")
-
-	row.Scan(&id, &name)
-
-	slog.Info("Read from PG:", slog.Any("id", id), slog.Any("name", name))
+	// bad migration for start
+	createTableSomes := `
+	create table if not exists somes(
+		id int generated always as identity primary key,
+		name text not null
+	)
+	`
+	_, err = conn.Exec(ctx, createTableSomes)
+	if err != nil {
+		slog.Error("Cannot create somes table", slog.Any("error", err))
+	}
 
 	mux := http.NewServeMux()
 
