@@ -1104,7 +1104,7 @@ Practical coding exercises for every block in the Go Roadmap.
 ### 32.3 Saga Pattern
 
 1. Implement a saga for an order flow: `CreateOrder -> ReserveInventory -> ChargePayment`. Each step has a compensating action.
-1. Write compensating transactions that undo previous steps when a later step fails (e.g., payment fails — release inventory, cancel order).
+1. Write compensating transactions that undo previous steps when a later step fails (e.g., payment fails - release inventory, cancel order).
 1. Add a saga log that records each step's status so that a crashed saga can be recovered and continued or compensated.
 
 ### 32.4 Idempotency
