@@ -21,6 +21,8 @@ func ReadConfig() *Config {
 	viper.AutomaticEnv()
 	viper.SetConfigType("env")
 
+	viper.SetDefault("APP_PORT", ":8080")
+
 	cfg.Addr = viper.GetString("APP_PORT")
 	cfg.pgUsername = viper.GetString("POSTGRES_USER")
 	cfg.pgPassword = viper.GetString("POSTGRES_PASSWORD")
