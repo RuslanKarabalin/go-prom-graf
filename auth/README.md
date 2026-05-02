@@ -24,8 +24,8 @@
 В postgres храняться данные о пользователе
     (почта, пароль, имя, фамилия и тд)
 
-В redis храняться выданные access,
-    refresh токены и некоторые метаданные
+В redis храняться выданные jwt
+    токены и некоторые метаданные
 
 ### Мониторинг и наблюдаемость
 
@@ -34,13 +34,3 @@ Prometheus и Grafana - для сбора и мониторинга метрик
 Elasticsearch, Logstash и Kibana - для сбора, хранения и поиска по метрикам
 
 Opentelemetry и Jaeger - для сбора, хранения и поиска по трейсам
-
-## Infrastructure
-
-- gitlab.com
-- ansible
-- k3s
-- flux
-- cloudNativePG
-- kube-prometheus-stack
-- sops + age

@@ -8,11 +8,11 @@ import (
 
 type Config struct {
 	Addr       string
-	pgUsername string
+	pgUser     string
 	pgPassword string
 	pgHost     string
 	pgPort     string
-	pgBasename string
+	pgDbname   string
 }
 
 func ReadConfig() *Config {
@@ -24,20 +24,21 @@ func ReadConfig() *Config {
 	viper.SetDefault("APP_PORT", ":8080")
 
 	cfg.Addr = viper.GetString("APP_PORT")
-	cfg.pgUsername = viper.GetString("POSTGRES_USER")
-	cfg.pgPassword = viper.GetString("POSTGRES_PASSWORD")
 	cfg.pgHost = viper.GetString("POSTGRES_HOST")
 	cfg.pgPort = viper.GetString("POSTGRES_PORT")
-	cfg.pgBasename = viper.GetString("POSTGRES_DB")
+	cfg.pgDbname = viper.GetString("POSTGRES_DBNAME")
+	cfg.pgUser = viper.GetString("POSTGRES_USER")
+	cfg.pgPassword = viper.GetString("POSTGRES_PASSWORD")
 	return cfg
 }
 
-func (c *Config) GetPostgresUrl() string {
-	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
-		c.pgUsername,
-		c.pgPassword,
+func (c *Config) PostgresConnString() string {
+	return fmt.Sprintf(
+		"host=%s port=%s dbname=%s user=%s password=%s",
 		c.pgHost,
 		c.pgPort,
-		c.pgBasename,
+		c.pgDbname,
+		c.pgUser,
+		c.pgPassword,
 	)
 }
