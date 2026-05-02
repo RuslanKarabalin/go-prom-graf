@@ -1,21 +1,22 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"os"
 
 	"example/internal/app"
 )
 
 func main() {
+	l := slog.Default()
 	a, err := app.New()
 	if err != nil {
-		log.Fatal("Can't create App", err)
+		l.Error("Can't create App", "err", err)
 		os.Exit(1)
 	}
 	err = a.Run()
 	if err != nil {
-		log.Fatal("Can't run App", err)
+		l.Error("Can't run App", "err", err)
 		os.Exit(1)
 	}
 }

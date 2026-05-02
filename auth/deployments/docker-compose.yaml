@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:18
-    container_name: pg_database
+    container_name: postgres
     env_file:
       - .env
     ports:
