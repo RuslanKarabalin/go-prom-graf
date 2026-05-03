@@ -1,2 +1,0 @@
-fmt:
-	gofmt -s -w .
