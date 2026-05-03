@@ -3,11 +3,12 @@ package app
 import (
 	"context"
 	"example/internal/config"
+	"example/internal/db"
 	"fmt"
 	"time"
 
-	"github.com/gofiber/contrib/fiberzap/v2"
-	"github.com/gofiber/fiber/v2"
+	middleware "github.com/gofiber/contrib/v3/zap"
+	"github.com/gofiber/fiber/v3"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pressly/goose/v3"
 	"go.uber.org/zap"
@@ -47,14 +48,13 @@ func New() (*App, error) {
 	}
 
 	goose.SetLogger(zap.NewStdLog(logger))
+	if err := db.RunMigrations(pgPool); err != nil {
+		return nil, err
+	}
 
-	fiber := fiber.New(
-		fiber.Config{
-			DisableStartupMessage: true,
-		},
-	)
+	fiber := fiber.New()
 
-	fiber.Use(fiberzap.New(fiberzap.Config{
+	fiber.Use(middleware.New(middleware.Config{
 		Logger: logger,
 	}))
 
@@ -71,5 +71,5 @@ func New() (*App, error) {
 }
 
 func (a *App) Run() error {
-	return a.Fiber.Listen(a.Config.Addr)
+	return a.Fiber.Listen(a.Config.Addr, fiber.ListenConfig{DisableStartupMessage: true})
 }

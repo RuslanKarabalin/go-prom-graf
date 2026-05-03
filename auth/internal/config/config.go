@@ -12,7 +12,7 @@ type Config struct {
 	pgPassword string
 	pgHost     string
 	pgPort     string
-	pgDbname   string
+	pgDb       string
 }
 
 func ReadConfig() *Config {
@@ -26,7 +26,7 @@ func ReadConfig() *Config {
 	cfg.Addr = viper.GetString("APP_PORT")
 	cfg.pgHost = viper.GetString("POSTGRES_HOST")
 	cfg.pgPort = viper.GetString("POSTGRES_PORT")
-	cfg.pgDbname = viper.GetString("POSTGRES_DBNAME")
+	cfg.pgDb = viper.GetString("POSTGRES_DB")
 	cfg.pgUser = viper.GetString("POSTGRES_USER")
 	cfg.pgPassword = viper.GetString("POSTGRES_PASSWORD")
 	return cfg
@@ -37,7 +37,7 @@ func (c *Config) PostgresConnString() string {
 		"host=%s port=%s dbname=%s user=%s password=%s",
 		c.pgHost,
 		c.pgPort,
-		c.pgDbname,
+		c.pgDb,
 		c.pgUser,
 		c.pgPassword,
 	)
